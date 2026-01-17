@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💖 Sudoku Solver for You 💖</title>
+<style>
+  body { font-family: 'Arial', sans-serif; text-align: center; background: #fff0f5; color: #333; }
+  h1 { color: #ff69b4; }
+  table { margin: auto; border-collapse: collapse; }
+  td { border: 1px solid #999; width: 40px; height: 40px; }
+  input { width: 38px; height: 38px; text-align: center; font-size: 18px; }
+  td:nth-child(3), td:nth-child(6) { border-right: 2px solid #ff69b4; }
+  tr:nth-child(3) td, tr:nth-child(6) td { border-bottom: 2px solid #ff69b4; }
+  button { margin: 20px; padding: 10px 20px; font-size: 16px; background: #ff69b4; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #ff1493; }
+</style>
+</head>
+<body>
+<h1>💖 Sudoku Solver 💖</h1>
+<p>Enter your puzzle and press Solve!</p>
+
+<table id="sudoku-grid"></table>
+
+<button onclick="startSolving()">Solve</button>
+
+<script>
+// --- Create the 9x9 input grid ---
+const table = document.getElementById("sudoku-grid");
+let cells = [];
+
+for (let i = 0; i < 9; i++) {
+    let row = [];
+    let tr = document.createElement("tr");
+    for (let j = 0; j < 9; j++) {
+        let td = document.createElement("td");
+        let input = document.createElement("input");
+        input.type = "number";
+        input.min = 1;
+        input.max = 9;
+        input.value = "";
+        td.appendChild(input);
+        tr.appendChild(td);
+        row.push(input);
+    }
+    table.appendChild(tr);
+    cells.push(row);
+}
+
+// --- Helper functions ---
+function getGrid() {
+    return cells.map(row => row.map(cell => cell.value ? parseInt(cell.value) : 0));
+}
+
+function setGrid(grid) {
+    for (let i = 0; i < 9; i++)
+        for (let j = 0; j < 9; j++)
+            cells[i][j].value = grid[i][j] || '';
+}
+
+function isValid(grid, row, col, num) {
+    for (let i = 0; i < 9; i++) {
+        if (grid[row][i] === num || grid[i][col] === num) return false;
+    }
+    let startRow = Math.floor(row/3)*3;
+    let startCol = Math.floor(col/3)*3;
+    for (let i=startRow; i<startRow+3; i++)
+        for (let j=startCol; j<startCol+3; j++)
+            if (grid[i][j] === num) return false;
+    return true;
+}
+
+// --- Async Solver for animation ---
+async function solve(grid) {
+    for (let i=0; i<9; i++) {
+        for (let j=0; j<9; j++) {
+            if (grid[i][j] === 0) {
+                for (let num=1; num<=9; num++) {
+                    if (isValid(grid,i,j,num)) {
+                        grid[i][j] = num;
+                        setGrid(grid);
+                        await new Promise(r=>setTimeout(r,30)); // animation
+                        if (await solve(grid)) return true;
+                        grid[i][j] = 0;
+                        setGrid(grid);
+                        await new Promise(r=>setTimeout(r,30));
+                    }
+                }
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// --- Start solving ---
+async function startSolving() {
+    let grid = getGrid();
+    if (!await solve(grid)) {
+        alert("❌ No solution exists for this puzzle.");
+    } else {
+        alert("✅ Puzzle solved! 💖");
+    }
+}
+</script>
+</body>
+</html>
